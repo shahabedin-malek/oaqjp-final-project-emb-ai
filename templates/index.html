@@ -1,1 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detector</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
+        body {
+            font-family: 'IBM Plex Sans', Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .header {
+            background-color: #0f62fe;
+            width: 100%;
+            padding: 16px 32px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 720px;
+            margin-top: 80px;
+        }
+
+        .container h2 {
+            font-size: 22px;
+            color: #161616;
+            margin-bottom: 8px;
+        }
+
+        .container p {
+            font-size: 14px;
+            color: #525252;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            font-size: 14px;
+            border: 1px solid #8d8d8d;
+            border-radius: 4px;
+            resize: vertical;
+            font-family: inherit;
+            background: #f4f4f4;
+            color: #161616;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        textarea:focus {
+            border-color: #0f62fe;
+            background: white;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #0f62fe;
+            color: white;
+        }
+
+        .btn-primary:hover { background-color: #0353e9; }
+
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #161616;
+        }
+
+        .btn-secondary:hover { background-color: #c6c6c6; }
+
+        .result-box {
+            margin-top: 28px;
+            padding: 20px;
+            border-left: 4px solid #0f62fe;
+            background: #edf5ff;
+            border-radius: 0 4px 4px 0;
+            font-size: 15px;
+            color: #161616;
+            min-height: 56px;
+            display: none;
+        }
+
+        .result-box.error {
+            border-left-color: #da1e28;
+            background: #fff1f1;
+        }
+
+        .result-box b {
+            color: #0f62fe;
+            font-size: 16px;
+        }
+
+        .footer {
+            margin-top: 32px;
+            font-size: 12px;
+            color: #8d8d8d;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Emotion Detector — Watson NLP</h1>
+    </div>
+
+    <div class="container">
+        <h2>Analyze Text Emotions</h2>
+        <p>Enter a sentence or paragraph below. The system will detect the dominant emotion using IBM Watson NLP.</p>
+
+        <textarea id="textInput" placeholder="e.g. I am so happy about this news!"></textarea>
+
+        <div class="btn-row">
+            <button class="btn-primary" onclick="analyzeEmotion()">Run Analysis</button>
+            <button class="btn-secondary" onclick="clearAll()">Clear</button>
+        </div>
+
+        <div class="result-box" id="result"></div>
+
+        <div class="footer">Powered by IBM Watson NLP Embed Library &nbsp;|&nbsp; Final Project — Emotion Detector</div>
+    </div>
+
+    <script>
+        function analyzeEmotion() {
+            const text = document.getElementById('textInput').value.trim();
+            const resultBox = document.getElementById('result');
+
+            if (!text) {
+                resultBox.style.display = 'block';
+                resultBox.className = 'result-box error';
+                resultBox.innerHTML = '⚠️ Please enter some text before running analysis.';
+                return;
+            }
+
+            resultBox.style.display = 'block';
+            resultBox.className = 'result-box';
+            resultBox.innerHTML = 'Analyzing...';
+
+            fetch(`/emotionDetector?textToAnalyze=${encodeURIComponent(text)}`)
+                .then(response => response.text())
+                .then(data => {
+                    resultBox.style.display = 'block';
+                    if (data.includes('Invalid')) {
+                        resultBox.className = 'result-box error';
+                        resultBox.innerHTML = '⚠️ ' + data;
+                    } else {
+                        resultBox.className = 'result-box';
+                        resultBox.innerHTML = '✅ ' + data;
+                    }
+                })
+                .catch(() => {
+                    resultBox.className = 'result-box error';
+                    resultBox.innerHTML = '❌ Error connecting to the server.';
+                });
+        }
+
+        function clearAll() {
+            document.getElementById('textInput').value = '';
+            const resultBox = document.getElementById('result');
+            resultBox.style.display = 'none';
+            resultBox.innerHTML = '';
+        }
+    </script>
+
+</body>
+</html>
